@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.lenovo.fourfirenotice.EditActivity">
+    <EditText
+        android:layout_weight="1"
+        android:gravity="top|left"
+        android:textSize="20dp"
+        android:id="@+id/edit"
+        android:layout_width="match_parent"
+        android:layout_height="0dp" />
+   <TextView
+       android:gravity="center"
+       android:textSize="25dp"
+       android:text="请设置提醒时间"
+       android:id="@+id/timechoice"
+       android:layout_weight="0.1"
+       android:layout_width="match_parent"
+       android:layout_height="0dp" />
+    <LinearLayout
+        android:layout_weight="0.1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <Button
+            android:id="@+id/delete"
+            android:text="delete"
+            android:layout_weight="0.3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <Button
+            android:id="@+id/date"
+            android:text="date"
+            android:layout_weight="0.3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <Button
+            android:id="@+id/time"
+            android:text="time"
+            android:layout_weight="0.3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+
+</LinearLayout>

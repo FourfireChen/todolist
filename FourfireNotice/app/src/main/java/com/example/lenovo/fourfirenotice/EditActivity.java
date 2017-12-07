@@ -1,26 +1,28 @@
 package com.example.lenovo.fourfirenotice;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.icu.util.Calendar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
-
-import org.litepal.crud.DataSupport;
+import android.widget.Toast;
 import org.litepal.tablemanager.Connector;
-
-import java.util.Calendar;
 import java.util.List;
 
-public class EditActivity extends AppCompatActivity implements View.OnClickListener
+public class EditActivity extends AppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener
 {
     private int years,months,days;
     private int hours,minutes;
@@ -33,7 +35,11 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
     private Button buttonDate;
     private Button buttonTime;
     private Intent intent;
+    private Intent alarmIntent;
     private int position;
+    private Switch aSwitch;
+    private AlarmManager alarmManager;
+    private PendingIntent pendingIntent;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -41,13 +47,13 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_edit);
         Connector.getDatabase();
         iniRes();
-        thisNotice = noticeList.get(position);
         iniNotice();
-        timepicker.setText(this.years + "." + (this.months + 1) + "." + this.days + "-" + this.hours + ":" + minutes);
+        timepicker.setText(this.years + "." + this.months + "." + this.days + "-" + this.hours + ":" + minutes);
         editText.setText(thisNotice.getText());
         button.setOnClickListener(this);
         buttonDate.setOnClickListener(this);
         buttonTime.setOnClickListener(this);
+        aSwitch.setOnCheckedChangeListener(this);
     }
 
     @Override
@@ -67,9 +73,14 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
                         hours = hourOfDay;
                         minutes = minute;
                         setTime(years,months,days,hours,minutes);
+                        if(aSwitch.isChecked())
+                        {
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.set(thisNotice.getYear(),thisNotice.getMonth(),thisNotice.getDay(),hourOfDay,minute,0);
+                            alarmManager.setExact(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),pendingIntent);
+                        }
                     }
                 },hours,minutes,true).show();
-
                 break;
             case R.id.date:
                 new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener()
@@ -78,9 +89,15 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
                     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth)
                     {
                         years = year;
-                        months = month;
+                        months = month + 1;
                         days = dayOfMonth;
                         setTime(years,months,days,hours,minutes);
+                        if(aSwitch.isChecked())
+                        {
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.set(year,month,dayOfMonth,thisNotice.getHour(),thisNotice.getMinute(),0);
+                            alarmManager.setExact(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),pendingIntent);
+                        }
                     }
                 },years,months,days).show();
                 break;
@@ -103,9 +120,16 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
         buttonDate = (Button)findViewById(R.id.date);
         buttonTime = (Button)findViewById(R.id.time);
         button = (Button)findViewById(R.id.delete);
+        aSwitch = (Switch)findViewById(R.id.switchbutton);
         editText = (EditText)findViewById(R.id.edit);
         intent = getIntent();
         position = intent.getIntExtra("position",0);
+        thisNotice = noticeList.get(position);
+        alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        alarmIntent = new Intent(this,AlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(EditActivity.this,0,alarmIntent,0);
+        if(thisNotice.getIsAlarm() == -1) aSwitch.setChecked(false);
+        else    aSwitch.setChecked(true);
     }
     public void iniNotice()
     {
@@ -117,7 +141,7 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
     }
     public void setTime(int year,int month,int day,int hour,int minute)
     {
-        timepicker.setText(this.years + "." + (this.months + 1) + "." + this.days + "-" + this.hours + ":" + minutes);
+        timepicker.setText(this.years + "." + this.months + "." + this.days + "-" + this.hours + ":" + minutes);
         thisNotice.setYear(year);
         thisNotice.setMonth(month);
         thisNotice.setDay(day);
@@ -147,5 +171,26 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
             {}
         });
         builder.show();
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+    {
+        if(isChecked)
+        {
+            aSwitch.setChecked(true);
+            thisNotice.setIsAlarm((short)1);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            calendar.set(thisNotice.getYear(),thisNotice.getMonth() - 1,thisNotice.getDay(),thisNotice.getHour(),thisNotice.getMinute(),0);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),pendingIntent);
+            Toast.makeText(this,"设置成功",Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            aSwitch.setChecked(false);
+            thisNotice.setIsAlarm((short)-1);
+            alarmManager.cancel(pendingIntent);
+        }
     }
 }

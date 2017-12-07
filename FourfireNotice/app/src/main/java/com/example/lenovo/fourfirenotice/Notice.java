@@ -2,8 +2,6 @@ package com.example.lenovo.fourfirenotice;
 
 import org.litepal.crud.DataSupport;
 
-import java.time.Year;
-import java.util.Calendar;
 
 /**
  * Created by lenovo on 2017/12/1.
@@ -11,6 +9,7 @@ import java.util.Calendar;
 
 public class Notice extends DataSupport
 {
+    private short isAlarm;
     private String text;
     private int year,month,day;
     private int hour,minute;
@@ -25,6 +24,7 @@ public class Notice extends DataSupport
         day = 29;
         hour = 10;
         minute = 0;
+        isAlarm = -1;
     }
 
     public void setTime(int year, int month, int day, int hour, int minute)
@@ -104,5 +104,15 @@ public class Notice extends DataSupport
     public void setText(String text)
     {
         this.text = text;
+    }
+
+    public short getIsAlarm()
+    {
+        return isAlarm;
+    }
+
+    public void setIsAlarm(short isAlarm)
+    {
+        this.isAlarm = isAlarm;
     }
 }

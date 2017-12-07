@@ -30,6 +30,8 @@
             android:theme="@style/EditActivity" >
         </activity>
 
+        <receiver android:name="com.example.lenovo.fourfirenotice.AlarmReceiver" />
+
         <meta-data
             android:name="android.support.VERSION"
             android:value="26.1.0" />

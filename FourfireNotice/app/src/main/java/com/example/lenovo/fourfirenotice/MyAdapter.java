@@ -20,7 +20,7 @@ import java.util.List;
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>
 {
     private List<Notice> noticeList;
-
+    public static boolean isDeleteMore = false;
     static class ViewHolder extends RecyclerView.ViewHolder
     {
         View noticeView;
@@ -72,6 +72,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>
                 holder.noticeView.getContext().startActivity(intent);
             }
         });
+        if(isDeleteMore)    holder.button.setVisibility(View.VISIBLE);
+        else    holder.button.setVisibility(View.INVISIBLE);
         holder.button.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -115,5 +117,14 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>
             {}
         });
         builder.show();
+    }
+
+    public void showDelete()
+    {
+        if(!isDeleteMore)
+            isDeleteMore = true;
+        else
+            isDeleteMore = false;
+        notifyDataSetChanged();
     }
 }

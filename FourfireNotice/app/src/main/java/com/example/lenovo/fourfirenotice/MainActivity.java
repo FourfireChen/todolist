@@ -1,7 +1,8 @@
 package com.example.lenovo.fourfirenotice;
 
+import android.app.Notification;
+import android.content.BroadcastReceiver;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -11,9 +12,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-
 import org.litepal.crud.DataSupport;
 import org.litepal.tablemanager.Connector;
 import java.util.ArrayList;
@@ -27,7 +28,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button button;
     private MyAdapter myAdapter;
     private android.support.v7.widget.Toolbar toolbar;
-    
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -55,10 +55,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v)
     {
-        Notice notice = new Notice("");
-        notice.save();
-        noticeList.add(notice);
-        myAdapter.updataList(noticeList);
+        switch (v.getId())
+        {
+            case R.id.addbtn:
+                Notice notice = new Notice("");
+                notice.save();
+                noticeList.add(notice);
+                myAdapter.updataList(noticeList);
+                break;
+        }
+
     }
 
     public void iniNotice()
@@ -89,6 +95,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 for(Notice notice:noticeList)
                     notice.save();
                 myAdapter.updataList(noticeList);
+            case R.id.deletemore:
+                myAdapter.showDelete();
+                break;
+            case R.id.forlevel:
+                Toast.makeText(this,"优先级的功能没做，感觉和时间排序一样",Toast.LENGTH_LONG).show();
+                break;
         }
         return true;
     }

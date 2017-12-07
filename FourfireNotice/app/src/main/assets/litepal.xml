@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <litepal>
-    <dbname value="demo"></dbname>
-    <version value="4"></version>
+    <dbname value="demo"/>
+    <version value="4"/>
 
     <list>
-        <mapping class="com.example.lenovo.fourfirenotice.Notice"></mapping>
+        <mapping class="com.example.lenovo.fourfirenotice.db.Notice"/>
+        <mapping class="com.example.lenovo.fourfirenotice.db.City"/>
+        <mapping class="com.example.lenovo.fourfirenotice.db.County"/>
+        <mapping class="com.example.lenovo.fourfirenotice.db.Province"/>
     </list>
 </litepal>

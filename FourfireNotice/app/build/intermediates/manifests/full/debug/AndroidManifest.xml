@@ -8,6 +8,8 @@
         android:minSdkVersion="24"
         android:targetSdkVersion="26" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name="org.litepal.LitePalApplication"
         android:allowBackup="true"
@@ -18,7 +20,7 @@
         android:supportsRtl="true"
         android:testOnly="true"
         android:theme="@style/AppTheme" >
-        <activity android:name="com.example.lenovo.fourfirenotice.MainActivity" >
+        <activity android:name="com.example.lenovo.fourfirenotice.activity.MainActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,11 +28,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.lenovo.fourfirenotice.EditActivity"
-            android:theme="@style/EditActivity" >
-        </activity>
+            android:name="com.example.lenovo.fourfirenotice.activity.EditActivity"
+            android:theme="@style/EditActivity" />
 
         <receiver android:name="com.example.lenovo.fourfirenotice.AlarmReceiver" />
+
+        <activity
+            android:name="com.example.lenovo.fourfirenotice.activity.ChooseCityActivity"
+            android:label="请选择城市" >
+        </activity>
 
         <meta-data
             android:name="android.support.VERSION"

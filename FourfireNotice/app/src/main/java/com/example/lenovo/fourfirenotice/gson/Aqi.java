@@ -7,7 +7,7 @@ package com.example.lenovo.fourfirenotice.gson;
 public class Aqi
 {
     public AQICity city;
-    private class AQICity
+    public class AQICity
     {
         public String aqi;
         public String pm25;

@@ -51,7 +51,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MyAdapter myAdapter;
     private android.support.v7.widget.Toolbar toolbar;
     private Intent weatherChoice;
-    private String weatherText;
+    private String lastWeatherId;
+    private String weatherId;
+    private SharedPreferences prefs;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         myAdapter = new MyAdapter(noticeList);
         recyclerView.setAdapter(myAdapter);
         button.setOnClickListener(this);
+        iniWeather();
     }
 
     @Override
@@ -149,35 +152,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setLayoutManager(layoutManager);
         collapsingToolbarLayout.setTitle("四火便签");
         Glide.with(this).load(R.drawable.background).into(imageView);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        weatherText = prefs.getString("weather",null);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        lastWeatherId = prefs.getString("weatherid",null);
         weatherChoice = new Intent(this,ChooseCityActivity.class);
     }
 
     public void iniWeather()
     {
-        if(weatherText != null)
+        if(lastWeatherId != null)
         {
-            Weather weather = Utility.handleWeatherResponse(weatherText);
-            showWeatherInfo(weather);
+            requestWeather(lastWeatherId);
         }
         else
         {
-            String weatherId = getIntent().getStringExtra("weather_id");
-            requestWeather(weatherId);
+            requestWeather("CN101200101");
         }
     }
 
     public void showWeatherInfo(Weather weather)
     {
         String name = weather.basic.cityName;
-        String time = weather.basic.update.updateTime.split(" ")[1];
+        String time = "更新时间:" + weather.basic.update.updateTime.split(" ")[1];
         String temp = weather.now.temperature + "℃";
         String weatherTxt = weather.now.more.info;
+        String pm252 = "pm2.5指数:" + weather.aqi.city.pm25;
         temperature.setText(temp);
         updateTime.setText(time);
         cityName.setText(name);
         txt.setText(weatherTxt);
+        pm25.setText(pm252);
     }
 
     public void requestWeather(final String weatherId)
@@ -187,14 +190,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback()
         {
             @Override
-            public void onFailure(Call call, IOException e)
+            public void onFailure(Call call, final IOException e)
             {
                 runOnUiThread(new Runnable()
                 {
                     @Override
                     public void run()
                     {
-                        Toast.makeText(MainActivity.this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this,"没拿到信息,你网络有毛病",Toast.LENGTH_SHORT).show();
+                        String weatherText = prefs.getString("weather",null);
+                        if(weatherText != null)
+                        {
+                            Weather weather = Utility.handleWeatherResponse(weatherText);
+                            showWeatherInfo(weather);
+                        }
+                        else
+                        {
+                            requestWeather("CN101200101");
+                        }
                     }
                 });
             }
@@ -213,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         {
                             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
                             editor.putString("weather",responseText);
+                            editor.putString("weatherid",weather.basic.weatherId);
                             editor.commit();
                             showWeatherInfo(weather);
                         }
@@ -224,5 +238,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if(requestCode == 1 && resultCode == 2)
+        {
+            Bundle bundle = data.getExtras();
+            weatherId = bundle.getString("weatherid");
+            requestWeather(weatherId);
+        }
     }
 }

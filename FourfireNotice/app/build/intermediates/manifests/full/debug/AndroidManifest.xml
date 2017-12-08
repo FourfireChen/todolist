@@ -31,7 +31,7 @@
             android:name="com.example.lenovo.fourfirenotice.activity.EditActivity"
             android:theme="@style/EditActivity" />
 
-        <receiver android:name="com.example.lenovo.fourfirenotice.AlarmReceiver" />
+        <receiver android:name="com.example.lenovo.fourfirenotice.tools.AlarmReceiver" />
 
         <activity
             android:name="com.example.lenovo.fourfirenotice.activity.ChooseCityActivity"

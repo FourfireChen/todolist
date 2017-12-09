@@ -1,5 +1,6 @@
 package com.example.lenovo.fourfirenotice.activity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -13,19 +14,25 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.lenovo.fourfirenotice.db.City;
+import com.example.lenovo.fourfirenotice.db.County;
+import com.example.lenovo.fourfirenotice.db.Province;
 import com.example.lenovo.fourfirenotice.gson.Weather;
 import com.example.lenovo.fourfirenotice.net.HttpUtil;
 import com.example.lenovo.fourfirenotice.net.Utility;
+import com.example.lenovo.fourfirenotice.tools.ChooseAdapter;
 import com.example.lenovo.fourfirenotice.tools.MyAdapter;
 import com.example.lenovo.fourfirenotice.R;
 import com.example.lenovo.fourfirenotice.tools.TimeComparetor;
 import com.example.lenovo.fourfirenotice.db.Notice;
+import com.example.lenovo.fourfirenotice.view.MoreListview;
 
 import org.litepal.crud.DataSupport;
 import org.litepal.tablemanager.Connector;
@@ -44,19 +51,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static List<Notice> noticeList = new ArrayList<>();
     private RecyclerView recyclerView;
     private ImageView imageView;
-    private ImageView weatherBackground;
     private Button button;
     private TextView cityName;
     private TextView temperature;
     private TextView pm25;
     private TextView txt;
     private TextView updateTime;
+    private TextView cityNameDrawer;
+    private TextView temperatureDrawer;
+    private TextView pm25Drawer;
+    private TextView txtDrawer;
+    private TextView updateTimeDrawer;
     private MyAdapter myAdapter;
     private android.support.v7.widget.Toolbar toolbar;
-    private Intent weatherChoice;
     private String lastWeatherId;
-    private String weatherId;
     private SharedPreferences prefs;
+    private static List<Province> provinceList;
+    private static List<City> cityList;
+    private static List<County> countyList;
+    private List<String> provinceNames = new ArrayList<>();
+    private List<String> cityNames = new ArrayList<>();
+    private List<String> countyNames = new ArrayList<>();
+    private static Province selectProvince;
+    private static City selectCity;
+    private MoreListview provinceListView;
+    private MoreListview cityListview;
+    private MoreListview countyListview;
+    private ChooseAdapter provinceAdapter;
+    private ChooseAdapter cityAdapter;
+    private ChooseAdapter coutyAdapter;
+    private ProgressDialog progressDialog;
+    public static final int LEVEL_PROVINCE = 1;
+    public static final int LEVEL_CITY = 2;
+    public static final int LEVEL_COUNTY = 3;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -69,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setAdapter(myAdapter);
         button.setOnClickListener(this);
         iniWeather();
+        iniQuery();
     }
 
     @Override
@@ -145,7 +173,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toolbar = (android.support.v7.widget.Toolbar)findViewById(R.id.toolbar);
         CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout)findViewById(R.id.toolbarlayout);
         imageView = (ImageView)findViewById(R.id.image);
-        weatherBackground = (ImageView)findViewById(R.id.weatherbackground);
         setSupportActionBar(toolbar);
         button = (Button)findViewById(R.id.addbtn);
         temperature = (TextView)findViewById(R.id.temp);
@@ -153,6 +180,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateTime = (TextView)findViewById(R.id.updatetime);
         cityName = (TextView)findViewById(R.id.cityname);
         txt = (TextView)findViewById(R.id.txt);
+        temperatureDrawer = (TextView)findViewById(R.id.temp2);
+        pm25Drawer = (TextView)findViewById(R.id.pm252);
+        updateTimeDrawer = (TextView)findViewById(R.id.updatetime2);
+        cityNameDrawer = (TextView)findViewById(R.id.cityname2);
+        txtDrawer = (TextView)findViewById(R.id.txt2);
         recyclerView = (RecyclerView) findViewById(R.id.recycleView);
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
@@ -160,7 +192,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Glide.with(this).load(R.drawable.background).into(imageView);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         lastWeatherId = prefs.getString("weatherid",null);
-        weatherChoice = new Intent(this,ChooseCityActivity.class);
+        provinceListView = (MoreListview)MainActivity.this.findViewById(R.id.prolistmain);
+        cityListview = (MoreListview)MainActivity.this.findViewById(R.id.citylistmain);
+        countyListview = (MoreListview)MainActivity.this.findViewById(R.id.countylistmain);
+        cityAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,cityNames);
+        provinceAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,provinceNames);
+        coutyAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,countyNames);
+        provinceListView.setAdapter(provinceAdapter);
+        cityListview.setAdapter(cityAdapter);
+        countyListview.setAdapter(coutyAdapter);
     }
 
     public void iniWeather()
@@ -187,6 +227,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         cityName.setText(name);
         txt.setText(weatherTxt);
         pm25.setText(pm252);
+        temperatureDrawer.setText(temp);
+        updateTimeDrawer.setText(time);
+        cityNameDrawer.setText(name);
+        txtDrawer.setText(weatherTxt);
+        pm25Drawer.setText(pm252);
     }
 
     public void requestWeather(final String weatherId)
@@ -198,6 +243,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onFailure(Call call, final IOException e)
             {
+
                 runOnUiThread(new Runnable()
                 {
                     @Override
@@ -209,10 +255,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         {
                             Weather weather = Utility.handleWeatherResponse(weatherText);
                             showWeatherInfo(weather);
-                        }
-                        else
-                        {
-                            requestWeather("CN101200101");
                         }
                     }
                 });
@@ -246,14 +288,178 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    public void queryProvinces()
     {
-        if(requestCode == 1 && resultCode == 2)
+        provinceList = DataSupport.findAll(Province.class);
+        if(provinceList.size() > 0)
         {
-            Bundle bundle = data.getExtras();
-            weatherId = bundle.getString("weatherid");
-            requestWeather(weatherId);
+            provinceNames.clear();
+            for(Province province : provinceList)
+            {
+                provinceNames.add(province.getProvinceName());
+            }
+            provinceAdapter.notifyDataSetChanged();
         }
+        else
+        {
+            String address = "http://guolin.tech/api/china";
+            queryFromInternet(address,LEVEL_PROVINCE);
+        }
+    }
+
+    public void queryCities()
+    {
+        cityList = DataSupport.where("provinceid = ?",String.valueOf(selectProvince.getId())).find(City.class);
+        if(cityList.size() > 0)
+        {
+            cityNames.clear();
+            for(City city : cityList)
+            {
+                cityNames.add(city.getCityName());
+            }
+            cityAdapter.notifyDataSetChanged();
+
+        }
+        else
+        {
+            int provinceCode = selectProvince.getProvinceCode();
+            String address = "http://guolin.tech/api/china/" + provinceCode;
+            queryFromInternet(address,LEVEL_CITY);
+        }
+    }
+
+    public void queryCouty()
+    {
+        countyList = DataSupport.where("cityid = ?",String.valueOf(selectCity.getId())).find(County.class);
+        if(countyList.size() > 0)
+        {
+            countyNames.clear();
+            for(County county : countyList)
+            {
+                countyNames.add(county.getCountyName());
+            }
+            coutyAdapter.notifyDataSetChanged();
+        }
+        else
+        {
+            int provinceCode = selectProvince.getProvinceCode();
+            int cityCode = selectCity.getCityCode();
+            String address = "http://guolin.tech/api/china/" + provinceCode + "/" + cityCode;
+            queryFromInternet(address,LEVEL_COUNTY);
+        }
+    }
+
+
+    public void queryFromInternet(String address, final int level)
+    {
+        showProgressDialog();
+        HttpUtil.sendOkHttpRequest(address, new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        closeProgressDialog();
+                        Toast.makeText(MainActivity.this,"没扒到",Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException
+            {
+                String responseText = response.body().string();
+                boolean result = false;
+                if(level == LEVEL_PROVINCE)
+                {
+                    result = Utility.handleProvinceResponse(responseText);
+                }
+                else if(level == LEVEL_CITY)
+                {
+                    result = Utility.handleCityResponse(responseText,selectProvince.getId());
+                }
+                else if(level == LEVEL_COUNTY)
+                {
+                    result = Utility.handleCountyResponse(responseText,selectCity.getId());
+                }
+                if(result)
+                {
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            closeProgressDialog();
+                            if(level == LEVEL_PROVINCE)
+                            {
+                                queryProvinces();
+                            }
+                            else if(level == LEVEL_CITY)
+                            {
+                                queryCities();
+                            }
+                            else if(level == LEVEL_COUNTY)
+                            {
+                                queryCouty();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public void showProgressDialog()
+    {
+        if(progressDialog == null)
+        {
+            progressDialog = new ProgressDialog(MainActivity.this);
+            progressDialog.setMessage("正在努力扒取信息");
+            progressDialog.setCanceledOnTouchOutside(false);
+        }
+        progressDialog.show();
+    }
+
+    public void closeProgressDialog()
+    {
+        if(progressDialog != null)
+        {
+            progressDialog.dismiss();
+        }
+    }
+
+    public void iniQuery()
+    {
+        provinceListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                selectProvince = provinceList.get(position);
+                queryCities();
+            }
+        });
+        cityListview.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                selectCity = cityList.get(position);
+                queryCouty();
+            }
+        });
+        countyListview.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+
+                requestWeather(countyList.get(position).getWeather());
+            }
+        });
+        queryProvinces();
     }
 }

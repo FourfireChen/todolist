@@ -33,11 +33,6 @@
 
         <receiver android:name="com.example.lenovo.fourfirenotice.tools.AlarmReceiver" />
 
-        <activity
-            android:name="com.example.lenovo.fourfirenotice.activity.ChooseCityActivity"
-            android:label="请选择城市" >
-        </activity>
-
         <meta-data
             android:name="android.support.VERSION"
             android:value="26.1.0" />

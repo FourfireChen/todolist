@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static List<Notice> noticeList = new ArrayList<>();
     private RecyclerView recyclerView;
     private ImageView imageView;
+    private ImageView weatherBackground;
     private Button button;
     private TextView cityName;
     private TextView temperature;
@@ -129,7 +132,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this,"优先级的功能没做，感觉和时间排序一样",Toast.LENGTH_LONG).show();
                 break;
             case R.id.weather:
-                startActivityForResult(weatherChoice,1);
+                DrawerLayout drawerLayout = (DrawerLayout)findViewById(R.id.drawyout);
+                drawerLayout.openDrawer(Gravity.START);
+//                startActivityForResult(weatherChoice,1);
                 break;
         }
         return true;
@@ -140,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toolbar = (android.support.v7.widget.Toolbar)findViewById(R.id.toolbar);
         CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout)findViewById(R.id.toolbarlayout);
         imageView = (ImageView)findViewById(R.id.image);
+        weatherBackground = (ImageView)findViewById(R.id.weatherbackground);
         setSupportActionBar(toolbar);
         button = (Button)findViewById(R.id.addbtn);
         temperature = (TextView)findViewById(R.id.temp);

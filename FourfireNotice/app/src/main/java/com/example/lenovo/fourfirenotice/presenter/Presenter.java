@@ -24,7 +24,6 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-import static com.example.lenovo.fourfirenotice.view.activity.MainActivity.noticeList;
 
 /**
  * Created by lenovo on 2017/12/11.
@@ -47,24 +46,47 @@ public class Presenter implements InterPresenter
     private List<String> provinceNames = new ArrayList<>();
     private List<String> cityNames = new ArrayList<>();
     private List<String> countyNames = new ArrayList<>();
+    private List<Notice> noticesList = new ArrayList<>();
+    private static InterPresenter presenter;
 
-    public Presenter(InterView myView)
+    private Presenter(InterView myView)//私有化构造器，实现单实例
     {
         MyView = myView;
         MyModel = new Model();
         prefs = PreferenceManager.getDefaultSharedPreferences((Context)myView);
         lastWeatherId = prefs.getString("weatherid",null);
     }
+    public static InterPresenter getPresenter(InterView myView)//利用缓存的方法，实现单实例
+    {
+        if(presenter == null)
+        {
+            return new Presenter(myView);
+        }
+        else
+        {
+            return presenter;
+        }
 
+    }
+
+    /**
+     * 以下一部分是对地区的处理
+     * 包括：
+     * 从数据库中读取省份信息
+     * 若不存在，则从网络上读取省份信息
+     * 为省份，城市，街区三个listview设置监听器
+     * 从网络扒取相应地区信息并显示
+     */
+    //查询省份信息，并请求InterView显示在Listview上
     public void queryProvinces()
     {
         provinceList = DataSupport.findAll(Province.class);
         if(provinceList.size() > 0)
         {
-            MyView.getProvinceNames().clear();
+            provinceNames.clear();
             for(Province province : provinceList)
             {
-                MyView.getProvinceNames().add(province.getProvinceName());
+                provinceNames.add(province.getProvinceName());
             }
             MyView.notifyProvinceChange();
         }
@@ -74,16 +96,16 @@ public class Presenter implements InterPresenter
             queryFromInternet(address,LEVEL_PROVINCE);
         }
     }
-
+    //同上
     public void queryCities()
     {
         cityList = DataSupport.where("provinceid = ?",String.valueOf(selectProvince.getId())).find(City.class);
         if(cityList.size() > 0)
         {
-            MyView.getCityNames().clear();
+            cityNames.clear();
             for(City city : cityList)
             {
-                MyView.getCityNames().add(city.getCityName());
+                cityNames.add(city.getCityName());
             }
             MyView.notifyCityChange();
 
@@ -95,16 +117,16 @@ public class Presenter implements InterPresenter
             queryFromInternet(address,LEVEL_CITY);
         }
     }
-
+    //同上
     public void queryCouty()
     {
         countyList = DataSupport.where("cityid = ?",String.valueOf(selectCity.getId())).find(County.class);
         if(countyList.size() > 0)
         {
-            MyView.getCountyNames().clear();
+            countyNames.clear();
             for(County county : countyList)
             {
-                MyView.getCountyNames().add(county.getCountyName());
+                countyNames.add(county.getCountyName());
             }
             MyView.notifyCountyChange();
         }
@@ -116,7 +138,7 @@ public class Presenter implements InterPresenter
             queryFromInternet(address,LEVEL_COUNTY);
         }
     }
-
+    //发送地区搜索请求到InterModel,从网络扒取信息并根据返回结果发送请求到Interview实现交互
     public void queryFromInternet(String address, final int level)
     {
         MyView.ViewShowProgressDialog();
@@ -164,7 +186,7 @@ public class Presenter implements InterPresenter
             }
         });
     }
-
+    //为view层的listview设置监听器，并初始化省份的显示
     public void iniQuery()
     {
         MyView.getProvinceListView().setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -197,6 +219,14 @@ public class Presenter implements InterPresenter
         queryProvinces();
     }
 
+    /**
+     * 以下是对天气信息的处理：
+     * 包括：
+     * 根据上一次保存的天气ID初始化天气显示
+     * 从网络扒取天气信息
+     * 发送请求至Interview，更新天气信息
+     */
+    //发送天气搜索请求到InterModel，从网络扒取信息并根据信息扒取成功与否发送请求到Interview进行交互
     public void requestWeather(final String weatherId)
     {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" +
@@ -235,7 +265,7 @@ public class Presenter implements InterPresenter
             }
         });
     }
-
+    //根据上一次选择的城市，初始化天气信息
     public void iniWeather()
     {
         if(lastWeatherId != null)
@@ -248,59 +278,64 @@ public class Presenter implements InterPresenter
         }
     }
 
-    public void sort()
-    {
-        Connector.getDatabase();
-        iniNotice();
-        Collections.sort(noticeList,new TimeComparetor());
-        for(Notice notice:noticeList)
-            notice.save();
-        MyView.updataList(noticeList);
-    }
-
+    /**
+     * 以下是对便签的操作：
+     * 包括：
+     * 从数据库读取，并初始化便签的数据
+     * 将便签按照用户设置的时间进行排序
+     * 添加便签
+     */
+    //从数据库读取并初始化便签的数据组
     public void iniNotice()
     {
-        noticeList = DataSupport.findAll(Notice.class);
-        if(noticeList.size() == 0)
+        Connector.getDatabase();
+        noticesList = DataSupport.findAll(Notice.class);
+        if(noticesList.size() == 0)
         {
             Notice notice = new Notice("哇帅哥来了");
             notice.save();
-            noticeList.add(notice);
+            noticesList.add(notice);
         }
-        MyView.updataList(noticeList);
     }
-
+    //根据用户设置的时间对便签进行排序，并发送请求到Interview通知显示便签
+    public void sort()
+    {
+        Collections.sort(noticesList,new TimeComparetor());
+        for(Notice notice:noticesList)
+            notice.save();
+        MyView.updataList(noticesList);
+    }
+    //添加便签的数量，并通知View显示刷新
     public void add()
     {
         Notice notice = new Notice("");
         notice.save();
-        noticeList.add(notice);
+        noticesList.add(notice);
         MyView.notifyNoticeChange();
     }
 
+    /**
+     * 以下方是为了方便View层对于少量数据的调用
+     * 详情请见Interpresenter
+     */
     @Override
     public List<Notice> getNoticeList()
     {
-        return noticeList;
+        return noticesList;
     }
-
-//    @Override
-//    public List<String> getProvinceNames()
-//    {
-//        return provinceNames;
-//    }
-//
-//    @Override
-//    public List<String> getCityNames()
-//    {
-//        return provinceNames;
-//    }
-//
-//    @Override
-//    public List<String> getCountyNames()
-//    {
-//        return provinceNames;
-//    }
-
-
+    @Override
+    public List<String> getProvinceNames()
+    {
+        return provinceNames;
+    }
+    @Override
+    public List<String> getCityNames()
+    {
+        return cityNames;
+    }
+    @Override
+    public List<String> getCountyNames()
+    {
+        return countyNames;
+    }
 }

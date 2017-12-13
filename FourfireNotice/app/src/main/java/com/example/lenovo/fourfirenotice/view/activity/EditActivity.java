@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.pdf.PdfRenderer;
 import android.icu.util.Calendar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,10 +20,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+
+import com.example.lenovo.fourfirenotice.presenter.InterPresenter;
+import com.example.lenovo.fourfirenotice.presenter.Presenter;
 import com.example.lenovo.fourfirenotice.sr.AlarmReceiver;
 import com.example.lenovo.fourfirenotice.R;
 import com.example.lenovo.fourfirenotice.model.db.Notice;
-
 import org.litepal.tablemanager.Connector;
 import java.util.List;
 
@@ -44,12 +47,14 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
     private Switch aSwitch;
     private AlarmManager alarmManager;
     private PendingIntent pendingIntent;
+    private InterPresenter presenter;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
         Connector.getDatabase();
+        presenter = MainActivity.presenter;
         iniRes();
         iniNotice();
         timepicker.setText(this.years + "." + this.months + "." + this.days + "-" + this.hours + ":" + minutes);
@@ -107,6 +112,7 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
     @Override
     protected void onPause()
     {
@@ -117,9 +123,10 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
             thisNotice.save();
         }
     }
+
     public void iniRes()
     {
-        noticeList = MainActivity.noticeList;
+        noticeList = presenter.getNoticeList();
         timepicker = (TextView)findViewById(R.id.timechoice);
         buttonDate = (Button)findViewById(R.id.date);
         buttonTime = (Button)findViewById(R.id.time);
@@ -176,7 +183,6 @@ public class EditActivity extends AppCompatActivity implements View.OnClickListe
         });
         builder.show();
     }
-
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
     {

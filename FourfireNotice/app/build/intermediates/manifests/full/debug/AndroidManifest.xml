@@ -31,7 +31,7 @@
             android:name="com.example.lenovo.fourfirenotice.view.activity.EditActivity"
             android:theme="@style/EditActivity" />
 
-        <receiver android:name="com.example.lenovo.fourfirenotice.AlarmReceiver" />
+        <receiver android:name="com.example.lenovo.fourfirenotice.sr.AlarmReceiver" />
 
         <meta-data
             android:name="android.support.VERSION"

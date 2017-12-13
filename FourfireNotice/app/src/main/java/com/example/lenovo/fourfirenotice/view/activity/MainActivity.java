@@ -1,7 +1,6 @@
 package com.example.lenovo.fourfirenotice.view.activity;
 
 import android.app.ProgressDialog;
-import android.content.SharedPreferences;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.lenovo.fourfirenotice.model.gson.Weather;
+import com.example.lenovo.fourfirenotice.presenter.InterPresenter;
 import com.example.lenovo.fourfirenotice.presenter.Presenter;
 import com.example.lenovo.fourfirenotice.view.InterView;
 import com.example.lenovo.fourfirenotice.view.tools.ChooseAdapter;
@@ -25,17 +25,10 @@ import com.example.lenovo.fourfirenotice.view.tools.MyAdapter;
 import com.example.lenovo.fourfirenotice.R;
 import com.example.lenovo.fourfirenotice.model.db.Notice;
 import com.example.lenovo.fourfirenotice.view.MoreListview;
-import org.litepal.tablemanager.Connector;
-import java.util.ArrayList;
 import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,InterView
 {
-    public static List<Notice> noticeList = new ArrayList<>();
     private RecyclerView recyclerView;
     private ImageView imageView;
     private Button button;
@@ -51,9 +44,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView updateTimeDrawer;
     private MyAdapter myAdapter;
     private android.support.v7.widget.Toolbar toolbar;
-    private List<String> provinceNames = new ArrayList<>();
-    private List<String> cityNames = new ArrayList<>();
-    private List<String> countyNames = new ArrayList<>();
     private MoreListview provinceListView;
     private MoreListview cityListview;
     private MoreListview countyListview;
@@ -61,16 +51,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ChooseAdapter cityAdapter;
     private ChooseAdapter coutyAdapter;
     private ProgressDialog progressDialog;
-    private Presenter presenter;
+    public static InterPresenter presenter;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Connector.getDatabase();
+        presenter = Presenter.getPresenter(this);
+        presenter.iniNotice();
         iniRes();
         button.setOnClickListener(this);
-        presenter = new Presenter(this);
         presenter.iniQuery();
         presenter.iniWeather();
     }
@@ -145,13 +135,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         provinceListView = (MoreListview)MainActivity.this.findViewById(R.id.prolistmain);
         cityListview = (MoreListview)MainActivity.this.findViewById(R.id.citylistmain);
         countyListview = (MoreListview)MainActivity.this.findViewById(R.id.countylistmain);
-        cityAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,cityNames);
-        provinceAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,provinceNames);
-        coutyAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,countyNames);
+        cityAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,presenter.getCityNames());
+        provinceAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,presenter.getProvinceNames());
+        coutyAdapter = new ChooseAdapter(MainActivity.this,R.layout.city_item,presenter.getCountyNames());
         provinceListView.setAdapter(provinceAdapter);
         cityListview.setAdapter(cityAdapter);
         countyListview.setAdapter(coutyAdapter);
-        myAdapter = new MyAdapter(noticeList);
+        myAdapter = new MyAdapter(presenter.getNoticeList());
         recyclerView.setAdapter(myAdapter);
     }
 
@@ -215,21 +205,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-    }
-
-    public List<String> getProvinceNames()
-    {
-        return provinceNames;
-    }
-
-    public List<String> getCityNames()
-    {
-        return cityNames;
-    }
-
-    public List<String> getCountyNames()
-    {
-        return countyNames;
     }
 
     @Override

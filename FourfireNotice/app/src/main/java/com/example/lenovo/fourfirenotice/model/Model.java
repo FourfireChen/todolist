@@ -1,18 +1,14 @@
 package com.example.lenovo.fourfirenotice.model;
 
-import android.content.Intent;
 import android.text.TextUtils;
-
 import com.example.lenovo.fourfirenotice.model.db.City;
 import com.example.lenovo.fourfirenotice.model.db.County;
 import com.example.lenovo.fourfirenotice.model.db.Province;
 import com.example.lenovo.fourfirenotice.model.gson.Weather;
 import com.google.gson.Gson;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -24,6 +20,10 @@ import okhttp3.Request;
 public class Model implements InterModel
 {
 
+    /**
+     * 以下是对网络操作的方法
+     * 详情见InterModel
+     */
     @Override
     public boolean handleProvinceResponse(String response)
     {

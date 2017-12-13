@@ -13,16 +13,13 @@ public interface InterView
     void ViewShowWeatherInfo(final Weather weather);//将Presenter返回的天气数据显示出来
     void ViewShowProgressDialog();//打开读取的进度条
     void ViewCloseProgressDialog();//关不读取进度条
-    List<String> getProvinceNames();//
-    List<String> getCityNames();
-    List<String> getCountyNames();
-    void failGetToast();
-    MoreListview getProvinceListView();
+    void failGetToast();//若扒取信息失败，提示
+    MoreListview getProvinceListView();//为了在presenter中设置listview的子项监听器
     MoreListview getCityListview();
     MoreListview getCountyListview();
-    void notifyCityChange();
+    void notifyCityChange();//为了方便在presenter中刷新listview
     void notifyCountyChange();
     void notifyNoticeChange();
     void notifyProvinceChange();
-    void updataList(List<Notice> noticeList);
+    void updataList(List<Notice> noticeList);//提供了强行刷新recycleview的方法
 }

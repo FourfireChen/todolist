@@ -16,6 +16,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 
 public class AlarmReceiver extends BroadcastReceiver
 {
+    //根据用户设置的闹钟时间，发送通知到用户
     @Override
     public void onReceive(Context context, Intent intent)
     {

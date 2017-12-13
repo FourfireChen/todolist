@@ -20,7 +20,7 @@
         android:supportsRtl="true"
         android:testOnly="true"
         android:theme="@style/AppTheme" >
-        <activity android:name="com.example.lenovo.fourfirenotice.activity.MainActivity" >
+        <activity android:name="com.example.lenovo.fourfirenotice.view.activity.MainActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,10 +28,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.lenovo.fourfirenotice.activity.EditActivity"
+            android:name="com.example.lenovo.fourfirenotice.view.activity.EditActivity"
             android:theme="@style/EditActivity" />
 
-        <receiver android:name="com.example.lenovo.fourfirenotice.tools.AlarmReceiver" />
+        <receiver android:name="com.example.lenovo.fourfirenotice.AlarmReceiver" />
 
         <meta-data
             android:name="android.support.VERSION"
